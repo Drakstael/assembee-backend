@@ -20,7 +20,7 @@ class User(Resource):
 
 class Project(Resource):
     def get(self, project_id: str):
-        data = {"project_id": project_id}
+        data = {}
         doc = db.collection("projects").document(project_id).get()
         unpack_document(doc, data)
         return data, 200
@@ -35,7 +35,7 @@ class Project(Resource):
                     "owner": db.collection("users").document(request.json["owner"]),
                     "contributors": []}
             doc = db.collection("projects").add(data)
-            data = {"project_id": doc.id}
+            data = {}
             unpack_document(doc, data)
             return data, 200
         except Exception:
@@ -48,7 +48,7 @@ class Projects(Resource):
                 "projects": []}
         docs = db.collection("projects").where("owner", "==", db.document(f"users/{user_id}")).stream()
         for doc in docs:
-            project = {"project_id": doc.id}
+            project = {}
             unpack_document(doc, project)
             data["projects"].append(project)
         return data, 200
@@ -60,9 +60,9 @@ class Search(Resource):
                 "projects": []}
         docs = db.collection("projects").stream()
         for doc in docs:
-            project = {"project_id": doc.id}
+            project = {}
             unpack_document(doc, project)
-            if query in project["name"]:
+            if query.lower() in project["name"].lower():
                 data["projects"].append(project)
         return data, 200
 
@@ -82,9 +82,9 @@ class Category(Resource):
     def get(self, category: str):
         data = {"category": category,
                 "projects": []}
-        docs = db.collection("projects").where("categories", "array-contains", f"{category}").stream()
+        docs = db.collection("projects").where("categories", "array_contains", f"{category}").stream()
         for doc in docs:
-            project = {"project_id": doc.id}
+            project = {}
             unpack_document(doc, project)
             data["projects"].append(project)
         return data, 200
