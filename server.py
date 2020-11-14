@@ -20,7 +20,8 @@ class Server:
             import lib.endpoints as endpoints
             self.app.add_url_rule("/", "index", Pages.index)
             resources = [(endpoints.User,
-                          f"{self.base_url}user/<string:username>"),
+                          f"{self.base_url}user/<string:user_id>",
+                          f"{self.base_url}user"),
                          (endpoints.Project,
                           f"{self.base_url}project",
                           f"{self.base_url}project/<string:project_id>"),
