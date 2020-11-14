@@ -31,6 +31,7 @@ class Project(Resource):
                     "description": request.json["description"],
                     "skills": request.json["skills"],
                     "availability": request.json["availability"],
+                    "categories": request.json["categories"],
                     "owner": db.collection("users").document(request.json["owner"]),
                     "contributors": []}
             doc = db.collection("projects").add(data)
@@ -53,6 +54,19 @@ class Projects(Resource):
         return data, 200
 
 
+class Search(Resource):
+    def get(self, query: str):
+        data = {"query": query,
+                "projects": []}
+        docs = db.collection("projects").stream()
+        for doc in docs:
+            project = {"project_id": doc.id}
+            unpack_document(doc, project)
+            if query in project["name"]:
+                data["projects"].append(project)
+        return data, 200
+
+
 class Categories(Resource):
     def get(self):
         data = {"categories": []}
@@ -61,4 +75,16 @@ class Categories(Resource):
             category = {}
             unpack_document(doc, category)
             data["categories"].append(category)
+        return data, 200
+
+
+class Category(Resource):
+    def get(self, category: str):
+        data = {"category": category,
+                "projects": []}
+        docs = db.collection("projects").where("categories", "array-contains", f"{category}").stream()
+        for doc in docs:
+            project = {"project_id": doc.id}
+            unpack_document(doc, project)
+            data["projects"].append(project)
         return data, 200

@@ -26,8 +26,12 @@ class Server:
                           f"{self.base_url}project/<string:project_id>"),
                          (endpoints.Projects,
                           f"{self.base_url}projects/<string:user_id>"),
+                         (endpoints.Search,
+                          f"{self.base_url}search/<string:query>"),
                          (endpoints.Categories,
-                          f"{self.base_url}categories")
+                          f"{self.base_url}categories"),
+                         (endpoints.Category,
+                          f"{self.base_url}category/<string:category>")
                          ]
             for resource in resources:
                 self.api.add_resource(*resource)
