@@ -32,7 +32,14 @@ class Server:
                          (endpoints.Categories,
                           f"{self.base_url}categories"),
                          (endpoints.Category,
-                          f"{self.base_url}category/<string:category>")
+                          f"{self.base_url}category/<string:category>"),
+                         (endpoints.Contributors,
+                          f"{self.base_url}contributors/<string:project_id>/<string:user_id>"),
+                         (endpoints.Notifications,
+                          f"{self.base_url}notifications/<string:user_id>",
+                          f"{self.base_url}notifications"),
+                         (endpoints.Notification,
+                          f"{self.base_url}notification/<string:notification_id>")
                          ]
             for resource in resources:
                 self.api.add_resource(*resource)

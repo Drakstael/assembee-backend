@@ -1,5 +1,6 @@
 from flask import request
 from flask_restful import Resource
+from google.cloud import firestore
 
 from lib.utils import unpack_document
 from lib.database import Database
@@ -71,6 +72,13 @@ class Project(Resource):
         except Exception:
             return Errors.wtf
 
+    def patch(self, project_id: str):
+        data = {}
+        db.collection("projects").document(project_id).update(request.json)
+        doc = db.collection("projects").document(project_id).get()
+        unpack_document(doc, data)
+        return data, 200
+
 
 class Projects(Resource):
     def get(self, user_id: str):
@@ -126,4 +134,70 @@ class Category(Resource):
             project = {}
             unpack_document(doc, project)
             data["projects"].append(project)
+        return data, 200
+
+
+class Contributors(Resource):
+    def post(self, project_id: str, user_id: str):
+        data = {"contributors": firestore.ArrayUnion([db.collection("users").document(user_id)])}
+        db.collection("projects").document(project_id).update(data)
+        data = {}
+        doc = db.collection("projects").document(project_id).get()
+        unpack_document(doc, data)
+        return data, 200
+
+    def delete(self, project_id: str, user_id: str):
+        data = {"contributors": firestore.ArrayRemove([db.collection("users").document(user_id)])}
+        db.collection("projects").document(project_id).update(data)
+        data = {}
+        doc = db.collection("projects").document(project_id).get()
+        unpack_document(doc, data)
+        return data, 200
+
+
+class Notifications(Resource):
+    def get(self, user_id: str):
+        data = {"user_id": user_id,
+                "notifications": []}
+        docs = db.collection("notifications").where("from", "==", db.collection("users").document(user_id)).stream()
+        for doc in docs:
+            project = {}
+            unpack_document(doc, project)
+            data["notifications"].append(project)
+        docs = db.collection("notifications").where("to", "==", db.collection("users").document(user_id)).stream()
+        for doc in docs:
+            project = {}
+            unpack_document(doc, project)
+            data["notifications"].append(project)
+        return data, 200
+
+    def post(self):
+        try:
+            data = {"from": db.collection("users").document(request.json["from"]),
+                    "to": db.collection("users").document(request.json["to"]),
+                    "project": db.collection("projects").document(request.json["project"]),
+                    "status": "pending",
+                    "timestamp": firestore.SERVER_TIMESTAMP}
+            doc = db.collection("notifications").add(data)[1].get()
+            data = {}
+            unpack_document(doc, data)
+            return data, 200
+        except Exception:
+            return Errors.wtf
+
+
+class Notification(Resource):
+    def get(self, notification_id: str):
+        data = {}
+        doc = db.collection("notifications").document(notification_id).get()
+        unpack_document(doc, data)
+        return data, 200
+
+    def patch(self, notification_id: str):
+        data = {"status": request.json["status"],
+                "timestamp": firestore.SERVER_TIMESTAMP}
+        db.collection("notifications").document(notification_id).update(data)
+        data = {}
+        doc = db.collection("notifications").document(notification_id).get()
+        unpack_document(doc, data)
         return data, 200
