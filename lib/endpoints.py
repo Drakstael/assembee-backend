@@ -19,7 +19,7 @@ class User(Resource):
         return data, 200
 
     def post(self):
-        exists = list(db.collection("users").where("email", "==", f"{request.json['email']}").stream())
+        exists = list(db.collection("users").where("email", "==", request.json['email']).stream())
         if exists:
             data = {}
             unpack_document(exists[0], data)
@@ -39,6 +39,13 @@ class User(Resource):
             return data, 200
         except Exception:
             return Errors.wtf
+
+    def patch(self, user_id: str):
+        data = {}
+        db.collection("users").document(user_id).update(request.json)
+        doc = db.collection("users").document(user_id).get()
+        unpack_document(doc, data)
+        return data, 200
 
 
 class Project(Resource):
@@ -68,12 +75,19 @@ class Project(Resource):
 class Projects(Resource):
     def get(self, user_id: str):
         data = {"user_id": user_id,
-                "projects": []}
-        docs = db.collection("projects").where("owner", "==", db.document(f"users/{user_id}")).stream()
+                "owner": [],
+                "contributor": []}
+        docs = db.collection("projects").where("owner", "==", db.collection("users").document(user_id)).stream()
         for doc in docs:
             project = {}
             unpack_document(doc, project)
-            data["projects"].append(project)
+            data["owner"].append(project)
+        docs = db.collection("projects").where("contributors", "array_contains",
+                                               db.collection("users").document(user_id)).stream()
+        for doc in docs:
+            project = {}
+            unpack_document(doc, project)
+            data["contributor"].append(project)
         return data, 200
 
 
@@ -106,7 +120,7 @@ class Category(Resource):
     def get(self, category: str):
         data = {"category": category,
                 "projects": []}
-        docs = db.collection("projects").where("categories", "array_contains", f"{category}").stream()
+        docs = db.collection("projects").where("categories", "array_contains", category).stream()
         # TODO: Case sensitive
         for doc in docs:
             project = {}
