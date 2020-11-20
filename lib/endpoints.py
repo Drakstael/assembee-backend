@@ -64,6 +64,7 @@ class Project(Resource):
                     "availability": request.json["availability"],
                     "categories": request.json["categories"],
                     "owner": db.collection("users").document(request.json["owner"]),
+                    "status": "ongoing",
                     "contributors": []}
             doc = db.collection("projects").add(data)[1].get()
             data = {}
@@ -77,6 +78,13 @@ class Project(Resource):
         db.collection("projects").document(project_id).update(request.json)
         doc = db.collection("projects").document(project_id).get()
         unpack_document(doc, data)
+        return data, 200
+
+    def delete(self, project_id: str):
+        data = {}
+        doc = db.collection("projects").document(project_id).get()
+        unpack_document(doc, data)
+        db.collection("projects").document(project_id).delete()
         return data, 200
 
 
