@@ -65,7 +65,7 @@ class Project(Resource):
                     "categories": request.json["categories"],
                     "owner": db.collection("users").document(request.json["owner"]),
                     "status": "ongoing",
-                    "contributors": []}
+                    "contributors": [db.collection("users").document("mCJERxLkk8ULfJCEbRdX")]}  # Hardcoded yiqi for now
             doc = db.collection("projects").add(data)[1].get()
             data = {}
             unpack_document(doc, data)
@@ -113,7 +113,6 @@ class Search(Resource):
                 "projects": []}
         docs = db.collection("projects").stream()
         for doc in docs:
-            print(doc.id)
             project = {}
             unpack_document(doc, project)
             if query.lower() in project["name"].lower():
