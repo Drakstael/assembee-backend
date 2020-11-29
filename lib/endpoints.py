@@ -65,7 +65,7 @@ class Project(Resource):
                     "categories": request.json["categories"],
                     "owner": db.collection("users").document(request.json["owner"]),
                     "status": "ongoing",
-                    "contributors": [db.collection("users").document("mCJERxLkk8ULfJCEbRdX")]}  # Hardcoded yiqi for now
+                    "contributors": [db.collection("users").document(request.json["owner"])]}
             doc = db.collection("projects").add(data)[1].get()
             data = {}
             unpack_document(doc, data)
